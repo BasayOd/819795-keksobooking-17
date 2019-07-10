@@ -1,5 +1,6 @@
 'use strict';
-
+var PINWIDTH = 50;
+var PINHEIGHT = 70;
 function randomInt(min, max) {
   return Math.floor(min + Math.random() * (max + 1 - min)); // собрал в одну строку
 }
@@ -37,10 +38,38 @@ var makeMapFragment = function (template) { // зачем то сделал фу
   }
   return fragment;
 };
+var disableInputsAndSelects = function (selector) {
+  var nodeList = document.querySelector(selector).querySelectorAll('input, select');
+  nodeList.forEach(function (value) {
+    value.setAttribute('disabled', true);
+  });
+};
+var enableInputsAndSelects = function (selector) {
+  var div = document.querySelector(selector).querySelectorAll('input, select');
+  div.forEach(function (value) {
+    value.removeAttribute('disabled');
+  });
+};
+var removeFogInStartWindow = function () {
+  document.querySelector('.ad-form').classList.remove('ad-form--disabled');
+  document.querySelector('.map').classList.remove('map--faded');
+};
+
 var elementsList = document.querySelector('.map__pins');
 var fragment = document.createDocumentFragment();
-document.querySelector('.map').classList.remove('map--faded');
 var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
-elementsList.appendChild(makeMapFragment(pinTemplate));
+
+
+disableInputsAndSelects('.ad-form');
+disableInputsAndSelects('.map__filters');
+document.querySelector('.map__pin--main').addEventListener('click', function () {
+  elementsList.appendChild(makeMapFragment(pinTemplate));
+  removeFogInStartWindow();
+  enableInputsAndSelects('.ad-form');
+  enableInputsAndSelects('.map__filters');
+  document.querySelector('.map__pins').addEventListener('mouseup', function (evt) {
+    document.querySelector('#address').value = evt.clientX + ', ' + evt.clientY;
+  });
+});
 
 
