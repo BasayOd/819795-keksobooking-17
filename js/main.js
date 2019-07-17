@@ -6,6 +6,7 @@ function randomInt(min, max) {
 }
 var avatarNumber = 1; // нельзя повторять аватары, для этого создал эту переменную, потом ее наращиваю
 var types = ['palace', 'flat', 'house', 'bungalo'];
+var mapWidth = document.querySelector('.map').clientWidth;
 var createObject = function () { // создаем функцию для создания обьекта
   var object = {
     'author': {
@@ -15,7 +16,7 @@ var createObject = function () { // создаем функцию для соз�
       'type': types[randomInt(0, 3)],
     },
     'location': {
-      'x': randomInt(25, (document.querySelector('.map__pins').offsetWidth - 25)),
+      'x': randomInt(25, (mapWidth - PINWIDTH)),
       'y': randomInt(130, 630)
     }
   };
@@ -58,18 +59,46 @@ var removeFogInStartWindow = function () {
 var elementsList = document.querySelector('.map__pins');
 var fragment = document.createDocumentFragment();
 var pinTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+var pinElement = document.querySelector('.map__pin--main');
 
 
 disableInputsAndSelects('.ad-form');
 disableInputsAndSelects('.map__filters');
-document.querySelector('.map__pin--main').addEventListener('click', function () {
+pinElement.addEventListener('mousedown', function (evt) {
+  evt.preventDefault();
   elementsList.appendChild(makeMapFragment(pinTemplate));
   removeFogInStartWindow();
   enableInputsAndSelects('.ad-form');
   enableInputsAndSelects('.map__filters');
-  document.querySelector('.map__pins').addEventListener('mouseup', function (evt) {
-    document.querySelector('#address').value = evt.clientX + ', ' + evt.clientY;
-  });
+  var startCoord = {
+    x: evt.clientX,
+    y: evt.clientY
+  };
+  var onMouseMove = function (moveEvt) {
+    moveEvt.preventDefault();
+    var shift = {
+      x: startCoord.x - moveEvt.clientX,
+      y: startCoord.y - moveEvt.clientY
+    };
+    startCoord = {
+      x: moveEvt.clientX,
+      y: moveEvt.clientY
+    };
+    if (pinElement.offsetTop - shift.y > 130 && pinElement.offsetTop - shift.y < 630) {
+      pinElement.style.top = (pinElement.offsetTop - shift.y) + 'px';
+    }
+    if (pinElement.offsetLeft - shift.x > 0 && pinElement.offsetLeft - shift.x < mapWidth - PINWIDTH) {
+      pinElement.style.left = (pinElement.offsetLeft - shift.x) + 'px';
+    }
+  };
+  var onMouseUp = function (upEvt) {
+    upEvt.preventDefault();
+    document.querySelector('#address').value =
+      (pinElement.offsetTop + PINHEIGHT) + ', ' + (pinElement.offsetLeft + PINWIDTH / 2);
+    elementsList.removeEventListener('mousemove', onMouseMove);
+  };
+  elementsList.addEventListener('mousemove', onMouseMove);
+  elementsList.addEventListener('mouseup', onMouseUp);
 });
 
 
