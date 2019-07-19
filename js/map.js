@@ -36,12 +36,50 @@
       var element = template.cloneNode(true);
       element.style = 'left:' + arrayObj[i].location.x + 'px;  top: ' + arrayObj[i].location.y + 'px;';
       element.querySelector('img').src = arrayObj[i].author.avatar;
-      fragment.appendChild(element);
+      window.pin.fragment.appendChild(element);
     }
-    return fragment;
+    return window.pin.fragment;
   };
   var removeFogInStartWindow = function () {
     document.querySelector('.ad-form').classList.remove('ad-form--disabled');
     document.querySelector('.map').classList.remove('map--faded');
   };
+  window.form.disableInputsAndSelects('.ad-form');
+  window.form.disableInputsAndSelects('.map__filters');
+  window.pin.pinElement.addEventListener('mousedown', function (evt) {
+    evt.preventDefault();
+    window.pin.elementsList.appendChild(makeMapFragment(window.pin.pinTemplate));
+    removeFogInStartWindow();
+    window.form.enableInputsAndSelects('.ad-form');
+    window.form.enableInputsAndSelects('.map__filters');
+    var startCoord = {
+      x: evt.clientX,
+      y: evt.clientY
+    };
+    var onMouseMove = function (moveEvt) {
+      moveEvt.preventDefault();
+      var shift = {
+        x: startCoord.x - moveEvt.clientX,
+        y: startCoord.y - moveEvt.clientY
+      };
+      startCoord = {
+        x: moveEvt.clientX,
+        y: moveEvt.clientY
+      };
+      if (window.pin.pinElement.offsetTop - shift.y > 130 && window.pin.pinElement.offsetTop - shift.y < 630) {
+        window.pin.pinElement.style.top = (window.pin.pinElement.offsetTop - shift.y) + 'px';
+      }
+      if (window.pin.pinElement.offsetLeft - shift.x > 0 && window.pin.pinElement.offsetLeft - shift.x < mapWidth - window.pinSize.WIDTH) {
+        window.pin.pinElement.style.left = (window.pin.pinElement.offsetLeft - shift.x) + 'px';
+      }
+    };
+    var onMouseUp = function (upEvt) {
+      upEvt.preventDefault();
+      document.querySelector('#address').value =
+        (window.pin.pinElement.offsetTop + window.pinSize.HEIGHT) + ', ' + (window.pin.pinElement.offsetLeft + window.pinSize.WIDTH / 2);
+      window.pin.elementsList.removeEventListener('mousemove', onMouseMove);
+    };
+    window.pin.elementsList.addEventListener('mousemove', onMouseMove);
+    window.pin.elementsList.addEventListener('mouseup', onMouseUp);
+  });
 })();
